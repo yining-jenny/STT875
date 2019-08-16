@@ -1,0 +1,229 @@
+---
+title: "FOR/STT 875, Exercise 7"
+author: "Yining(Jenny) Chen"
+date: "7/24/2019"
+output: html_document
+---
+
+## Learning objectives
+  + Introduce `with`, `tapply`, and `cut` functions
+  + Summarize data using the `table` function with logical subsetting
+  + Practice using factor data types
+  
+## Overview
+Modify this R Markdown file by filling in the code needed to answer the questions.
+
+## Submission instructions
+Upload your exercise_7.Rmd and exercise_7.html files to the Exercise 7 D2L dropbox. 
+
+## Grading
+You will receive full credit if your R Markdown document: 1) compiles without error; and 2) correctly completes the `# TODO:` code chunks. Also, please, fill in the feedback [questions](#questions) at the end of the exercise. 
+
+## Getting started
+Again, set some global options to make the R code printed in the html output look nice.
+
+```{r global_options}
+knitr::opts_chunk$set(comment = NA, tidy = TRUE)
+```
+
+###Three functions: `table`, `cut`, and `tapply`
+
+The `table`, `cut`, and `tapply` functions are very handy for partitioning and summarizing data sets. We'll use these functions to summarize World Bank data on life expectancy, GDP, fertility rate, population, etc., for countries over the years 1960-2014. (These data share some similarities with the `gapminder` data we have worked with previously.)
+```{r, cache = TRUE}
+WorldBank <- read.csv("http://blue.for.msu.edu/FOR875/data/WorldBank.csv", header = TRUE)
+str(WorldBank)
+```
+
+The region values in the data set are informative but lengthy. 
+
+```{r}
+levels(WorldBank$region)
+```
+Let's create a `region2` variable with shorter but less descriptive values, for simplicity. 
+
+```{r}
+WorldBank$region2 <- WorldBank$region
+levels(WorldBank$region2) <- c("EastAsia", "Europe", "LatAmer", "MideastAndNorthAfrica", "NorthAmer", "SouthAsia", "SubSaharanAfrica")
+```
+
+##The `table` function
+
+We have seen the `table` function before. The `table` function returns a one, two, three, or higher dimensional contingency table. For example, we can try to tabulate the number of countries in each region.
+
+```{r}
+table(WorldBank$region2)
+```
+
+Recall, tables can easily be sorted.
+
+```{r}
+sort(table(WorldBank$region2))
+sort(table(WorldBank$region2), decreasing = TRUE)
+```
+
+These tables aren't quite what we wanted, however, since each country appears multiple times, once for each year. We need to divide by the number of unique years in the data set. First, calculate the number of unique years in the data set.
+
+```{r}
+#Number of unique years
+n.years <- length(unique(WorldBank$year))
+```
+
+Now divide the original table by the number of unique years to obtain a table that counts each country only once.
+
+```{r}
+#Use table to tabulate the number of countries per region
+sort(table(WorldBank$region2))/n.years
+```
+
+The `table` function can also take a logical vector as input. For example, we can tabulate the number of countries which have life expectancy less than or equal to, or greater than, 60 years.
+
+```{r}
+table(WorldBank$life.expectancy > 60)
+```
+
+Here again countries are counted more than once, but that may be what is wanted in this case. In the first case it was more clear what the table was representing, but in this case `FALSE` and `TRUE` by themselves don't provide much clarity. The `dnn` argument can be used to provide a label for the table. Don't forget to look at the documentation for the `table` function (`?table`) if you are curious why the argument is labeled `dnn`.
+
+```{r}
+table(WorldBank$life.expectancy > 60, dnn = "Life Expectancy more than 60 years")
+```
+
+Next we investigate the two-way frequency table relating life expectancy and region.
+
+```{r}
+table(WorldBank$region2, WorldBank$life.expectancy > 60)
+```
+
+Again, labels would help. Create the same table, but use the `dnn` argument to add both row and column labels. (You'll need to give a length two character vector as the value of `dnn`.)
+
+```{r}
+# TODO 7.1: Create the labeled two-way table here
+table(WorldBank$region2, WorldBank$life.expectancy > 60, dnn = c("Region", "Life Expectancy more than 60 years"))
+```
+
+##The `with` function
+
+The `$` method of referring to a variable in a data frame can lead to messy code. The `with` function provides a sometimes preferable way to specify variables. Here is an example that creates the one-way frequency table of life expectancy using `with`.
+
+```{r}
+with(WorldBank, table(life.expectancy > 60, dnn = "Life Expectancy more than 60 years"))
+```
+
+Next use `with` to create the two-way table of region and life expectancy with row and column labels.
+
+```{r}
+# TODO 7.2: Create the table here
+with(WorldBank, table(region2, life.expectancy > 60, dnn = c("Region", "Life Expectancy more than 60 years")))
+```
+
+##Using `tapply`
+
+Consider investigating mean life expectancy by region. For example we could compute the mean life expectancy by region.
+
+```{r}
+with(WorldBank, mean(life.expectancy[region2 == "EastAsia"]))
+```
+
+The function returned `NA` since there are some missing observations. Add the argument `na.rm = TRUE` to the mean function to get the mean of the non-missing observations.
+```{r}
+# TODO 7.3: Compute the mean of the non-missing life expectancies for EastAsia here
+with(WorldBank, mean(life.expectancy[region2 == "EastAsia"], na.rm = TRUE))
+```
+
+We could continue in this way:
+
+```{r}
+with(WorldBank, mean(life.expectancy[region2 == "Europe"], na.rm = TRUE))
+with(WorldBank, mean(life.expectancy[region2 == "LatAmer"], na.rm = TRUE))
+```
+
+Etc.
+
+But there's an easier way, using the `tapply` function.
+
+```{r}
+with(WorldBank, tapply(X = life.expectancy, INDEX = region2, FUN = mean, na.rm = TRUE ))
+```
+
+The function `tapply` takes an "atomic object" (typically a vector) as the argument `X`, a list of one or more factors of the same length as `X` as the `INDEX`, a function as the `FUN`, and possibly arguments to the function such as `na.rm = TRUE`. 
+
+Here a second factor `income` is added. 
+```{r}
+with(WorldBank, tapply(X = life.expectancy, INDEX = list(region2, income), FUN = mean, na.rm = TRUE ))
+```
+
+##Using `cut` to create factors
+Consider investigating the mean life expectancy for countries by latitude. For example, do countries in tropical latitudes have higher or lower life expectancy than countries in temperate latitudes? We will use the following latitude divisions:
+
++ $23.5 \leq \text{lat} \leq 66.5$: Northern temperate
++ $0 \leq \text{lat} < 23.5$: Northern tropics
++ $-23.5 \leq \text{lat} < 0$: Southern tropics
++ $-66.5 \leq \text{lat} < -23.5$: Southern temperate
+
+(The frigid zones are omitted since none of the countries in the data set lie in these zones.)
+
+We can compute the mean life expectancy in each zone using logical subsetting. For example, here we compute the mean life expectancy in the northern tropics. (We're also averaging over years, of course.)
+
+
+```{r}
+with(WorldBank, mean(life.expectancy[0 <= latitude & latitude < 23.5], na.rm = TRUE))
+```
+
+Next, calculate the mean life expectancy for the southern tropics.
+
+```{r}
+# TODO 7.4: Compute the mean life expectancy for the southern tropics here
+with(WorldBank, mean(life.expectancy[(-23.5) <= latitude & latitude < 0], na.rm = TRUE))
+```
+
+We could continue in this way, but there is an easier way, using the `cut` function to create the factor we want.
+
+First let's look at cut in a simple context. 
+
+```{r}
+x <- 0:50
+cut(x, breaks = c(0, 10, 20, 30, 40, 50))     
+cut(x, breaks = c(0, 10, 20, 30, 40, 50), include.lowest = TRUE)      
+cut(x, breaks = c(0, 10, 20, 30, 40, 50), right = FALSE)      
+cut(x, breaks = c(0, 10, 20, 30, 40, 50), right = FALSE, include.lowest = TRUE)       
+cut(x, breaks = c(0, 10, 20, 30, 40, 50), labels = c("low", "midlow", "mid", "midhigh", "high"), include.lowest = TRUE)     
+```
+
+As we can see, `cut` divides the range of our vector into intervals and labels each vector member accordingly. By default, the divisions are labeled by the range (like `[0,10)`), but the `labels` argument can take in a custom vector of labels.
+
+Now use `tapply` to calculate mean life expectancy by latitude region, with `cut` defining the factor which will separate countries into northern temperate, northern tropical, southern tropical, and southern temperate regions. Include appropriate labels for the latitude regions. Which latitudinal region has the highest and lowest mean life expectancy?
+
+```{r}
+# TODO 7.5: Calculate the mean life expectancies here
+latitude2 <- cut(
+  WorldBank$latitude, 
+  breaks = c(-66.5, -23.5, 0, 23.5, 66.5), 
+  labels = c("Southern temperate", "Southern tropics", "Northern tropics", "Northern temperate"), 
+  include.lowest = TRUE, 
+  right = FALSE)     
+with(WorldBank, tapply(X = life.expectancy, INDEX = latitude2, FUN = mean, na.rm = TRUE))      
+# Northern temperate has highest mean life expectancy 68.97819; 
+# Southern tropics lowest mean life expectancy 56.51467.
+```
+
+********
+
+Congratulations! You've reached the end of Exercise 7.
+
+###Questions?
+
+If you have any lingering questions about the material in this document or in the corresponding chapter, put them here.
+
+*None*
+
+
+###Give us your feedback!
+
+1.  How do you feel you're doing in this class?
+
+*I really like this class and like learning how the code would be affected by a little change in command.*
+
+2.  What could be done to improve your learning experience?
+ 
+*I encountered many problems at begining of this exercise, but solved them after thinking deeply about the implications of the code. I think listing more questions in the examples helps us think about the differences in the code and why.*
+
+*********

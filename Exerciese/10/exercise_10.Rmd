@@ -1,0 +1,194 @@
+---
+title: "FOR/STT 875, Exercise 10"
+author: "Yining(Jenny) Chen"
+date: "8/5/2019"
+output: html_document
+---
+## Learning objectives
+  + Translate statistical notation into coded functions
+  + Learn about tools for checking the validity of function arguments
+  + Practice writing functions that return multiple objects
+
+## Overview
+This exercise uses statistical distributions to motivate learning about functions and provide some practice converting algorithms into code. You don’t need to know anything about statistics to successfully complete this exercise &#9786;.
+
+## Submission instructions
+Upload your exercise_10.Rmd and exercise_10.html files to the Exercise 10 D2L dropbox. Note, I don’t provide an exercise_10.Rmd template so you’ll need to create your own and populate it with the `# TODO:` code chunks.
+
+## Grading
+You will receive full credit if your R Markdown document: 1) compiles without error; and 2) correctly completes the `##TODO:` code chunks. Also, please, fill in the feedback [questions](https://d2l.msu.edu/content/enforced/816258-US19-FOR-875-730-97M955-EL-02-360/exercise_10.html?d2lSessionVal=7Afhd2huEKdbb8gQY1NyH5X2l&ou=816258&d2l_body_type=3#questions) at the end of the exercise.
+
+## Getting started
+
+```{r global_options, echo = FALSE}
+knitr::opts_chunk$set(comment = NA, tidy = TRUE)
+```
+
+R provides functions that return useful characteristics of many common statistical distributions. The naming convention for these functions is a prefix, which identifies what the function does, followed by an abbreviation of the statistical distribution’s name. These prefixes are:
+
+  + `p` for “probability”, the cumulative distribution function (CDF)
+  + `q` for “quantile”, the inverse CDF
+  + `d` for “density”, the density function (PDF)
+  + `r` for “random”, a random variable having the specified distribution.
+  
+For the normal distribution, these functions are `pnorm`, `qnorm`, `dnorm`, and `rnorm` (where the `norm` portion reminds us this is for the normal distribution). For the binomial distribution, these functions are `pbinom`, `qbinom`, `dbinom`, and `rbinom`. And so forth. If you’re curious, [here’s](https://stat.ethz.ch/R-manual/R-devel/library/stats/html/Distributions.html) a list of statistical distributions in base R
+
+The Pareto distribution is not available in base R, so we’re going to code it up ourselves! Specifically, for this exercise, we’ll just code the quantile function, i.e., `qpareto`. Here’s a bit of background on deriving the Pareto’s quantile function (you don’t need to understand the subsequent PDF or CDF details, but pay close attention to the definition of quantile function $Q(p)$, i.e., the last formula).
+
+The Pareto family of distributions is parameterized by $\alpha$ and $x_{0}$, and has probability density function (PDF)
+
+\[
+\ f(x) = \begin{cases}\ \frac{\left(\alpha-1 \right)x_{0}^{\alpha-1}}{x^\alpha},& x > x_{0}\\   0, & x \leq x_{0}.\end{cases} 
+\]
+
+From the PDF it is relatively easy to compute the CDF, which is given by     
+
+\[
+\ F(x) = \begin{cases}\ 0 & x < x_{0}\\ 1-\left(\frac{x_{0}}{x}\right)^{a-1} &  x \geq x_{0}.\end{cases}
+\]
+
+The **quantile function** is defined for $0 \leq p \leq 1$ and returns the value $x_{p}$ such that $F(x_{p}) = p$, i.e., the value with area $p$ to its left. For the Pareto distribution the quantile function is given by
+
+\[
+Q(p) = Q(p,\alpha,x_{0}) = x_{0}(1-p)^{-\frac{1}{\alpha-1}}. 
+\]   
+
+Using the definition of $Q(p)$, it is easy to compute the $p$th quantile for specific values of $p$. For example, here are the medians ($0.5$ quantiles) of Pareto distributions with $x_0=1, α=3.5, x_0=6×10^8, \alpha=2.34$, and the $0.92$ quantile of the Pareto distribution with $x_0=1×10^6, \alpha=2.5$.
+
+
+```{r}
+1 * (1 - 0.5)^(-1/(3.5 - 1))    
+6e+08 * (1 - 0.5)^(-1/(2.34 - 1))     
+1e+06 * (1 - 0.92)^(-1/(2.5 - 1))
+```
+
+Of course it would be helpful to have a function that automated this process, both so we don’t have to remember the form of the quantile function for the Pareto distribution and so we avoid making mistakes.   
+
+## Part 1
+  
+Write a function called `qpareto.1` that takes arguments `p`, `alpha`, and `x0` and returns $Q(p,α,x_0)$ (defined above).
+
+```{r}
+##TODO 10.1: write your `qpareto.1` function and show that it returns the same answers as the three tests below
+qpareto.1 <- function(p, alpha, x0) {
+  return(x0 * (1-p)^(-1/(alpha-1)))
+}
+
+qpareto.1(p = 0.5, alpha = 3.5, x0 = 1)
+qpareto.1(p = 0.5, alpha = 2.34, x0 = 6e+08)    
+qpareto.1(p = 0.92, alpha = 2.5, x0 = 1e+06)
+```
+
+## Part 2
+
+Most of the quantile functions in R have an argument `lower.tail` that is either `TRUE` or `FALSE`. If `TRUE` the function returns the pth quantile. If `FALSE` the function returns the $1−p$th quantile, i.e., returns the value $x_p$ such that $F(x_p)=1−p$. This just provides a convenience for the user.
+
+Create a function `qpareto.2` that has an additional argument `lower.tail` which is by default set to `TRUE`. Your `qpareto.2` function should test whether `lower.tail` is `FALSE`. If it is `FALSE` the function should replace p by $1−p$. Then pass either p or $1−p$ to `qpareto.1` to compute the appropriate quantile, i.e., `qpareto.1` is called from inside of `qpareto.2`.
+
+```{r}
+##TODO 10.2: write your `qpareto.2` function and shows that it returns the same answers as the two tests below   
+qpareto.2 <- function(p, alpha, x0, lower.tail=TRUE) {
+  if(lower.tail== FALSE) {
+    p <- 1-p
+  }
+  return (qpareto.1(p, alpha, x0))
+}
+
+qpareto.2(p = 0.5, alpha = 3.5, x0 = 1)
+qpareto.2(p = 0.08, alpha = 2.5, x0 = 1e+06, lower.tail = FALSE)
+```
+
+Note that there is a downside to writing the function the way we have. We need `qpareto.1` to be in the workspace when `qpareto.2` is called. But there is a big advantage. If we discover a better way to calculate quantiles of the Pareto distribution we can rewrite `qpareto.1` and the new version will automatically be used in `qpareto.2`. 
+
+## Part 3
+
+Next, adding checks to ensure that arguments to the function are reasonable would be helpful. In the case of the Pareto quantile function we need $0≤p≤1$, $\alpha>1$, and $x_0>0$. We can use several `if` statements and `stop` functions to check arguments and to display error messages. Another option is to use the `stopifnot` function. This function evaluates each of the expressions given as arguments. If any are not `TRUE`, the `stop` function is called, and a message is printed about the first untrue statement. Here is an example.
+
+```{r, error = TRUE}
+ff <- function(p, y, z) {
+    stopifnot(p > 0, p < 1, y < z)
+    return(c(p,y,z))
+}
+
+ff(p = 0.5, y = 3, z = 5)
+ff(p = -1, y = 3, z = 5) 
+ff(p = -1, y = 3, z = 2)   
+ff(p = 2, y = 3, z = 5)   
+ff(p = 0.5, y = 3, z = 2)   
+```
+
+Write a function `qpareto` that adds a `stopifnot` statement to the `qpareto.2` function. The `stopifnot` statement should check the validity of the three arguments `p`, `x0`, and `alpha`.
+
+Importantly, R Markdown will not compile if your R function stops due to `stopifnot` function. You can, and should, tell the offending R code chunks to ignore the stop call, by including `error=TRUE` in the code chunk’s opening tag (see point #5 [here](https://yihui.name/knitr/demo/output) in the `knitr` help page).
+
+```{r, error = TRUE}
+##TODO 10.3: write your `qpareto` function and shows that it returns the same answers as the five tests below  
+qpareto <- function(p, alpha, x0, lower.tail=TRUE) {
+  stopifnot(p <= 1, alpha > 1, x0 > 0)
+  if(lower.tail== FALSE) {
+    p <- 1-p
+  }
+  return (qpareto.1(p, alpha, x0))
+}
+
+qpareto(p = 0.5, alpha = 3.5, x0 = 1)
+qpareto(p = 0.08, alpha = 2.5, x0 = 1e+06, lower.tail = FALSE)
+qpareto(p = 1.08, alpha = 2.5, x0 = 1e+06, lower.tail = FALSE)
+qpareto(p = 0.5, alpha = 0.5, x0 = -4)
+qpareto(p = 0.5, alpha = 2, x0 = -4)
+```
+
+## Part 4
+
+The `qpareto` functions returned a length one vector. Often functions should return more complex R objects such as lists. The maximum likelihood estimators of the mean and variance of a normal distribution are the sample mean ($\hat\mu$) and a scaled version of the sample variance ($\hat\sigma^2$) defined as:
+\[
+\hat\mu = \frac{\sum_{i=1}^n X_i}{n} \quad and \quad \hat\sigma^2 = \frac{\sum_{i=1}^n (X_i-\hat\mu)^2}{n}.
+\]
+
+Write a function named `normal.mle` that takes as input a vector `x` of data values and returns a two-component list. One component should be named `mean_hat` and should be the estimate of the mean. The other component should be named `var_hat` and should be the estimate of the variance. The function should check whether the argument `x` is numeric, and whether the length of `x` is at least two. (Hint: you’ll want to use the `sum` function in both your mean and variance expressions).
+
+```{r, error = TRUE}
+##TODO 10.4: write your `normal.mle` function and shows that it returns the same answers as the three tests below
+normal.mle <- function(x){
+  stopifnot(is.numeric(x) == TRUE, length(x) >= 2)
+  n <- length(x)
+  mean_hat <- sum(x)/n
+  var_hat <-  sum((x-mean_hat)^2)/n
+  return(list(mean_hat = mean_hat, var_hat = var_hat))
+}
+
+normal.mle(c(1, 2, 1, 4))
+normal.mle(c("a", "b"))
+normal.mle(1)
+```
+
+Congratulations! You’ve reached the end of Exercise 10.
+
+## Questions?
+If you have any lingering questions about the material in this document or in the corresponding chapter, put them here.
+
+*None*
+
+## Give us your feedback!
+How do you feel you’re doing in this class?
+*It feels good when I can help classmates solve their problem on Piazza.*
+
+What could be done to improve your learning experience?
+*For TODO 10.4, I was also confused what's the question means at the beginning as others asked on Piazza. I think maybe the question itself could been improved to easier way for understanding.*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

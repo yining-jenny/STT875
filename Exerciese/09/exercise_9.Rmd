@@ -1,0 +1,204 @@
+---
+title: "FOR/STT 875, Exercise 9"
+name: "Yining(Jenny) Chen"
+date: 7/31/2019
+output: html_document
+---
+
+## Learning objectives
+  + Work with several key `dplyr` functions
+  + Manipulate data frames (actually tibbles)
+  + Summarize and visualize data from large data files
+  
+## Overview
+Modify this R Markdown file by filling in the code needed to answer the questions.
+
+## Submission instructions
+Upload your exercise_9.Rmd and exercise_9.html files to the Exercise 9 D2L dropbox. 
+
+## Grading
+You will receive full credit if your R Markdown document: 1) compiles without error; and 2) correctly completes the `# TODO:` code chunks. Also, please, fill in the feedback [questions](#questions) at the end of the exercise. 
+
+## Getting started    
+Again, set some global options to make the R code printed in the HTML output look nice.
+
+```{r global_options, echo=FALSE}
+knitr::opts_chunk$set(comment = NA, tidy = TRUE)
+```
+
+This exercise offers some practice using `dplyr`. The exercise is adapted from the introductory `dplyr` vignette that is available [here](https://cran.r-project.org/web/packages/dplyr/vignettes/dplyr.html). 
+
+We'll use a data frame `flights` that is included in the `nycflights13` package, so load both the `dplyr` and `nycflights13` libraries. **If you haven't yet installed one or both of these packages, you'll have to do that first.** In your console window type `install.packages("dplyr")` and 
+`install.packages("nycflights13")` if needed.
+
+Now load the libraries and make the nycflights13 data available.
+
+
+```{r, message = FALSE}
+library(dplyr)
+library(nycflights13)
+```
+
+First let's look at the data frame `flights`. The following would be dangerous if `nycflights13` were an ordinary data frame (because all `r nrow(flights)` rows and `r ncol(flights)` columns would be printed to your screen), but it is a `tbl_df` object which has more intelligent (although sometimes irritating) display options.
+
+```{r}
+flights
+```     
+     
+     
+     
+##`print` and `glimpse`  
+What if we wanted to see more (or less) than 10 rows of `flights` or wanted to see all the variables? To specify the number of rows displayed we can use a print statement, and specify the number of rows:
+
+```{r}
+print(flights, n = 20)
+```
+
+To see all the variables, use `glimpse`.
+
+```{r}
+glimpse(flights)
+```
+      
+      
+      
+##`filter`, `slice`, and `arrange`      
+The `filter` function filters rows based on specified criteria. It is similar to the `subset` function in base R. For example here we select flights from March that had Detroit Metro Airport as their destination.
+
+```{r}
+filter(flights, month == 3 & dest == "DTW")
+```
+
+Which flights in January have either Detroit Metro (DTW) or Chicago O'Hare (ORD) destinations?
+
+```{r}
+##TODO 9.1: January flights to Detroit Metro (DTW) or Chicago O'Hare (ORD)
+filter(flights, month == 1 & (dest == "DTW" | dest == "ORD"))
+# or
+filter(flights, month == 1 & dest %in% c("DTW", "ORD"))
+```
+
+The `slice` function selects specified rows. To select the first, third, seventh, and twentieth rows:
+
+```{r}
+slice(flights, c(1, 3, 7, 20))
+```
+
+The `arrange` function reorders rows. For example here we order the data set first by arrival time and then by carrier.
+
+```{r}
+arrange(flights, arr_time, carrier)
+```
+
+Arrange flights by distance (`distance`) and then by departure delay (`dep_delay`), with the sorting being in descending order in both cases? (You'll find the `desc` function useful in conjunction with `arrange`.)
+
+```{r}
+#TODO 9.2: arrange flights by distance and then by departure delay, with the sorting being in descending order in both cases
+flights %>% arrange(desc(distance), desc(dep_delay))
+# or     
+print(select(arrange(flights, desc(distance), desc(dep_delay)), distance, dep_delay))      
+```
+
+*TODO 9.3*: In your output above, what happens to `dep_delay` when `distance` changes from one distance to the next smallest? Add your answer here.  
+
+*Answer*: At page 35, row 342 has smallest `dap_delay`(-16) for first and the largest `distance` (4983). The next smallest `distance`(4963) starts from row 343 has the largest `dep_daly`(290) for `distance`(4963). Same for the next smallest that the `dep_delay` has decreasing sorts for each `distance` thus always starts from the largest `dep_delay` for each `distance`.           
+
+
+
+##`select`, `mutate`, and `summarize`       
+The `select`, `mutate`, and `summarize` functions work with columns. To choose a subset of the existing columns, use `select`. It is also possible to rename variables when using `select`. Here are two examples.
+
+```{r}
+select(flights, month, origin, dest)
+select(flights, month, origin, destination = dest)
+```
+
+Columns to be selected can also be specified using `start:end` to specify all columns from the column named `start` to the column named `end`. In addition a minus sign before the specified columns indicates that all except those columns should be selected. 
+
+Use select to return a data frame with the variables representing departure time, departure delay, arrival time, arrival delay, origin, and destination.
+
+```{r}
+##TODO 9.4: Select the columns here
+select(flights, departureTime = dep_time, departureDelay = dep_delay, arrivalTime = arr_time, arrivalDelay = arr_delay, origin, destination = dest)   
+```
+
+The `mutate` function provides a simple way to create new columns that are functions of existing columns. 
+
+```{r}
+glimpse(mutate(flights,
+  gain = arr_delay - dep_delay,
+  speed = distance / air_time * 60))
+```
+
+Create two new columns, one called `total_gain` (calculated as `gain` in the `mutate` call above), and another which has the gain per hour, i.e., `total_gain` divided by the `(air_time/60)`.
+
+```{r}
+#TODO 9.5: Create the new columns here
+glimpse(mutate(flights, total_gain = arr_delay - dep_delay, gain_per_hour = total_gain/(air_time/60) ))
+```
+
+The `summarize` (or `summarise`) function returns a function of one or more columns. 
+
+```{r}
+summarise(flights,
+  mean_dep_delay = mean(dep_delay, na.rm = TRUE), mean_arr_delay = mean(arr_delay, na.rm = TRUE))
+```
+
+We'll see the real power of `summarize` when we pair it with `dplyr`'s grouping capabilities. 
+
+
+
+##`group_by` and `%>%`     
+Grouping operations add substantially to the power of the `dplyr` functions. We will focus on using `summarize` with grouping, but grouping also can be used with other functions. (This is akin to using `tapply` but the syntax and power are much better.) Often we apply several functions in order. The piping operator `%>%` improves both readability and intuitiveness of these more complex operations.
+
+Here are three different ways to compute the number of flights, the mean distance of flights, and the mean arrival delay of flights, for each month of the year. In the first, we create an intermediate data frame with grouping. In the second, we nest functions. In the third, we use the piping operator.
+
+```{r}
+flights_by_month <- group_by(flights, month)
+summarize(flights_by_month, number = n(), mean_distance = mean(distance, na.rm = TRUE), mean_arrival_delay = mean(arr_delay, na.rm = TRUE))
+summarize(group_by(flights, month), number = n(), mean_distance = mean(distance, na.rm = TRUE), mean_arrival_delay = mean(arr_delay, na.rm = TRUE))
+group_by(flights, month) %>% summarize(number = n(), mean_distance = mean(distance, na.rm = TRUE), mean_arrival_delay = mean(arr_delay, na.rm = TRUE))
+```
+
+We can even pipe the results into the `ggplot` function to produce a scatter plot. Of course if we planned to do a lot of exploration we might want to save the results first and then construct the plot, as in the second section below.
+
+```{r}
+##Pipe the results directly into ggplot
+library(ggplot2)
+group_by(flights, month) %>% summarize(number = n(), mean_distance = mean(distance, na.rm = TRUE), mean_arrival_delay = mean(arr_delay, na.rm = TRUE)) %>% ggplot(aes(x = month, y = mean_arrival_delay)) + geom_point()
+##Save the results in "delays" and then use ggplot on delays
+delays <- group_by(flights, month) %>% summarize(number = n(), mean_distance = mean(distance, na.rm = TRUE), mean_arrival_delay = mean(arr_delay, na.rm = TRUE))
+ggplot(data = delays, aes(x = month, y = mean_arrival_delay)) + geom_point()
+```
+
+Create a data frame that gives the number of flights and the mean arrival delay for flights on the carrier UA (United Airlines) whose destination is O'Hare Airport (ORD), with the number of flights and mean arrival delay calculated separately for flights out of each of the `origin` airports. (Hint: You'll probably want to use `filter` first to get the UA flights whose destination is ORD, then group by the originating airport, then calculate the statistics requested.)
+
+```{r}
+##TODO 9.6: add code here to answer the query above
+filter(flights, carrier == "UA" & dest == "ORD") %>% 
+  group_by(origin) %>% 
+  summarise(number = n(), mean_arrival_delay = mean(arr_delay, na.rm = TRUE)) 
+```
+
+********
+
+Congratulations! You've reached the end of Exercise 9.
+
+###Questions?
+
+If you have any lingering questions about the material in this document or in the corresponding chapter, put them here.
+
+*In TODO 9.2, I tried code `flights %>% arrange(desc(distance, dep_delay))` at first. The results didn't arrange by descreasing of dep_delay but only by the distance. Then I change to the format I had now which has both the correct orders. But I'm still curious what's the meaning of this code?*
+
+
+###Give us your feedback!
+
+1.  How do you feel you're doing in this class?
+
+*I really learnt a lot from this class and really like it..*
+
+2.  What could be done to improve your learning experience?
+
+*Since the book is really helpful, the homework could depend more on what's in the book.*
+
+*********

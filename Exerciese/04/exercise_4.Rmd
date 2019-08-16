@@ -1,0 +1,280 @@
+---
+title: "FOR/STT 875, Exercise 4"
+author: "Yining(Jenny) Chen"
+date: 7/18/2019
+output: html_document
+---
+
+## Learning objectives
+  + Use functions to describe data frame characteristics
+  + Summarize and generate basic graphics for variables held in data frames
+  + Apply the `subset` function with logical operators
+  + Illustrate `NA`, `NaN`, `Inf`, and other special values occur
+  + Recognize the implications of using floating point arithmetic with logical operators
+
+## Overview
+Modify this R Markdown file by filling in the code needed to answer the questions.
+
+## Submission instructions
+Upload your exercise_4.Rmd and exercise_4.html files to the Exercise 4 D2L dropbox. 
+
+## Grading
+You will receive full credit if your R Markdown document: 1) compiles without error; and 2) correctly completes the `# TODO:` code chunks. Also, please, fill in the feedback [questions](#questions) at the end of the exercise. 
+
+## Getting started
+Again, set some global options to make the R code printed in the HTML output look nice.
+
+```{r global_options}
+knitr::opts_chunk$set(comment = NA, tidy = TRUE)
+```
+
+## Data Frames
+
+In this exercise we'll investigate a data set from (http://www.gapminder.org), a site that contains a wealth of data and visualizations related to health, wealth, population, etc. of countries of the world. Typical datasets from (http://www.gapminder.org) are somewhat messy, with a lot of missing observations, so today we'll work with data extracted from the more complete data sets by Jenny Bryan at UBC. First we load the data into R.
+
+```{r, cache = TRUE}
+location <- "http://blue.for.msu.edu/FOR875/data/gapminder.tsv"
+gapminder <- read.delim(location)
+```
+
+The `str` function reports on the structure of an object in R. It's often useful to use `str` when working with a new dataset.
+
+```{r}
+str(gapminder)
+```
+
+The output from `str` shows the `gapminder` data frame has six variables, including `country` (a factor), `year` (an integer), `pop` (numeric), `continent` (a factor), `lifeExp` (numeric), and `gdpPercap` (numeric). 
+
+How would you extract the third row of the data frame?
+
+```{r}
+# TODO 4.1: Extract the third row here
+gapminder[3,]
+```
+
+How would you extract the first 50 elements of the variable `year`?
+
+```{r}
+# TODO 4.2: Extract the first 50 elements of the variable year here
+gapminder$year[1:50] 
+```
+
+There are a lot of repeated values in `year`. The `unique` function reports on the unique values in a variable. 
+
+```{r}
+# TODO 4.3: Display the unique values in the variable year here
+unique(gapminder$year)
+```
+
+Next we will work with two particular years, 1952 and 2002, from the dataset. We will use the `subset` function to extract data frames containing data from these two years. Here is how to extract the data for 1952:
+
+```{r}
+gapminder1952 <- subset(gapminder, year == 1952)
+str(gapminder1952)
+```
+
+Note that to specify that a variable is equal to a particular value, we use `==`. Next extract the data for 2002, and assign the resulting data frame to an object named `gapminder2002`.
+
+```{r}
+# TODO 4.4: Create the data frame here
+gapminder2002 <- subset(gapminder, year == 2002)
+str(gapminder2002)
+```
+
+Now we draw side-by-side boxplots of life expectancy for the five continents in the dataset for 1952.
+
+```{r}
+# boxplot for all 5 continents
+boxplot(gapminder1952$lifeExp)
+
+# boxplots separated by continent
+boxplot(lifeExp ~ continent, data = gapminder1952)
+```
+
+What do you notice from these boxplots?
+
+Draw similar boxplots for 2002. 
+
+```{r}
+# TODO 4.5: Draw the boxplots here
+boxplot(gapminder2002$lifeExp)
+boxplot(lifeExp ~ continent, data = gapminder2002)
+```
+
+Do any obvious differences show up between the two years? 
+
+Next calculate the median life expectancy, for both 1952 and 2002. 
+
+```{r}
+# TODO 4.6: Calculate the median life expectancies here
+median(gapminder1952$lifeExp)
+median(gapminder2002$lifeExp)
+```
+
+What do you notice?
+
+Next calculate the mean and median GDP for both years. 
+```{r}
+# TODO 4.7: Calculate the mean and median GDPs here
+mean(gapminder1952$gdpPercap)
+mean(gapminder2002$gdpPercap)
+median(gapminder1952$gdpPercap)
+median(gapminder2002$gdpPercap)
+```
+
+Again, what do you notice?
+
+Choose a country of interest. Create a data frame that only contains data from that country, and then draw two scatter plots, one of the life expectancy versus year, and another of the GDP versus year. 
+
+```{r}
+# TODO 4.8: Create the data frame and draw the scatter plots here
+gapminderChina <- subset(gapminder, country == "China")
+str(gapminderChina)
+plot(lifeExp ~ year, data = gapminderChina)
+plot(gdpPercap ~ year, data = gapminderChina)
+```
+
+## NA, NaN, Inf, etc.
+
+For each of the following expressions, first guess what the output will be when the expression is evaluated in R, then enter the expression in R to check your guess (this part is not graded, just check your intuition and facts from math classes you took a long time ago).
+
+a. 1/0
+b. 0/0
+c. 1/0 + 5
+e. 1/0 - 1/0
+e. -2^(10000)
+f. exp(Inf)
+g. exp(-Inf)
+h. 0^0
+i. Inf^0
+j. 0^Inf
+k. log(0)
+l. log(-Inf)
+
+```{r}
+1/0
+0/0
+1/0 + 5
+1/0 - 1/0
+-2^(10000)
+exp(Inf)
+exp(-Inf)
+0^0
+Inf^0
+0^Inf
+log(0)
+log(-Inf)
+```
+
+## Floating point arithmetic
+
+R, as does most software, uses floating point arithmetic, which is not the same as the arithmetic we learn, because computers cannot represent all numbers exactly. This has important consequences when we test for equality of numbers and in other settings we'll explore in the course.
+
+Here are a few examples.
+
+First, would you expect `0.2 == 0.6/3` to return TRUE or FALSE? Test it out.
+
+```{r}
+# TODO 4.9: Enter 0.2 == 0.6/3 and see what happens. Explain the potentially surprising result in commented text.
+0.2 == 0.6/3
+# Because 0.2 is a floating point that could be the binary approximation of the true decimal value. We don't know the numbers beyond the precise range given by R as 24-bit. Thus x1 == x2 is FALSE in most case even though the answer numberically looks same. 
+```
+
+Next consider the vector `point3` created below.
+
+```{r}
+point3 <- c(0.3, 0.4 - 0.1, 0.5 - 0.2, 0.6 - 0.3, 0.7 - 0.4)
+point3
+```
+
+Test whether each element of `point3` is equal to 0.3
+
+```{r}
+# TODO 4.10: Perform the test here
+0.3 == 0.3   
+0.4 - 0.1 == 0.3    
+0.5 - 0.2 == 0.3   
+0.6 - 0.3 == 0.3   
+0.7 - 0.4 == 0.3   
+```
+
+`.Machine` is a list that holds information on the numerical characteristics of the machine R is running on, such as the largest double or integer and the machine's precision. For example 
+```{r}
+.Machine$double.eps
+```
+is the smallest positive floating-point number x such that 1 + x != 1. The false in `point3 == 0.3` and `0.2 == 0.6/3` show us that using floating point arithmetic with logical operators can yield unexpected results. The false for `0.2 == 0.6/3` is because floating point arithmetic of 0.6/3 will equal 0.2 + x, where x is some very small value. 
+
+If you want to safely apply a logical tests to computed values, R provides a set of functions that test with a given tolerance, e.g., equal up to 1.5e-8 digits. For example, 
+```{r}
+all.equal(0.2, 0.6/3)
+```
+We revisit this topic in Chapter 7.3 in the course text.
+
+Here's another example of the limitations of floating point arithmetic. In calculus we were taught the base of the natural logarithm is
+$$ e = \lim_{n\to\infty} (1 + 1/n)^n $$
+So in principle we should be able to get closer and closer approximations to $e$ by using larger and larger values of $n$ in the above expression ($e$ is something close to 2.718282). See [here](https://en.wikipedia.org/wiki/E_(mathematical_constant)) if you need a refresher.
+
+Let's try a few.
+
+```{r}
+
+n <- 100
+(1 + 1/n)^n
+n <- 10000
+(1 + 1/n)^n
+n <- 1000000
+(1 + 1/n)^n
+n <- 100000000
+(1 + 1/n)^n
+```
+
+So far things are looking good. Investigate what happens as you increase $n$. Each time multiply $n$ by 10. Continue until you get to 10000000000000000. What happens?
+
+```{r}
+n <- 1000000000
+(1 + 1/n)^n
+n <- 10000000000
+(1 + 1/n)^n
+n <- 100000000000
+(1 + 1/n)^n
+```
+
+Things are started going weird beyond this point on my machine (i.e., the approximation is no longer close to $e$ = 2.71828). The majority computers should start to give bad answers around this size of $n$. 
+
+```{r}
+n <- 1000000000000
+(1 + 1/n)^n
+n <- 10000000000000
+(1 + 1/n)^n
+n <- 100000000000000
+(1 + 1/n)^n
+n <- 1000000000000000
+(1 + 1/n)^n
+n <- 10000000000000000
+(1 + 1/n)^n
+```
+
+You don't have to understand exactly how your machine handles floating point numbers, but it is good to be aware that testing for equality of numbers may result in unexpected behavior.
+
+********
+
+Congratulations! You've reached the end of Exercise 4.
+
+###Questions?
+
+If you have any lingering questions about the material in this document or in the corresponding chapter, put them here.
+
+*I think I get the idea of the folating point and how it forms. But don't understand why in TODO 4.10 that some are TRUE (instead of thought should be all FALSE). Why 0.5-0.2 and 0.6-0.3 can be TRUE? What's the difference from other two?*
+
+
+###Give us your feedback!
+
+1.  How do you feel you're doing in this class?
+
+*I really like the class so far and learnt a lot! *
+
+2.  What could be done to improve your learning experience?
+
+*Would like to have more examples or resources can provide more examples for help understanding how the code works.*
+
+*********

@@ -1,0 +1,152 @@
+---
+title: "FOR/STT 875, Exercise 8"
+author: "Yining(Jenny) Chen"
+date: "7/25/2019"
+output: html_document
+---
+
+## Learning objectives  
+  + Work with messy data
+  + Import data from an external spreadsheet
+  + Practice using functions in `tidyr` and `ggplot2`
+  
+## Overview  
+Modify this R Markdown file by filling in the code needed to answer the questions.
+
+In this exercise we'll experience a small amount of the pain (or pleasure, depending on your perspective) of working with realistic data sets. 
+
+## Submission instructions  
+Upload your exercise_8.Rmd and exercise_8.html files to the Exercise 8 D2L dropbox. 
+
+## Grading  
+You will receive full credit if your R Markdown document: 1) compiles without error; and 2) correctly completes the `# TODO:` code chunks. Also, please, fill in the feedback [questions](#questions) at the end of the exercise. 
+
+##Getting the "raw" data from Gapminder  
+Go to http://www.gapminder.org/data/. You should see a list of 25 data sets available for download, out of 519 such data sets (as of July 25, 2018). Enter `life expectancy` in the search box in the right corner of the data table. The second result should be called "Life expectancy (years)". 
+
+Click on the link in the `Download` column to download an Excel spreadsheet with the data. Open the spreadsheet, which will have several sheets, in Excel. If it's not the active sheet already, click on the `Data` tab to make it active. The first column has a list of countries, and the subsequent columns have life expectancies for years from 1800 through 2016. How are missing values indicated in the spreadsheet?
+
+Although it's possible to read Excel spreadsheets directly into R, we'll first save the spreadsheet as a CSV file. Save it in the working directory of your R session. (If you don't know the working directory, type `getwd()` in the console window. Ideally you've created a new R project in a directory of your choice, and this will be the working directory.) Excel will probably remind you that it can only save the active sheet, and will also give various other warnings about saving as a CSV file. Choose a simple name such as `LifeExp.csv` since you'll have to use this name as an argument to the `read.csv` function soon.
+
+##Getting the data into R and doing some clean up
+Use `read.csv` to read the data into an object called `gapminder1`. Make sure to use `na.strings` to specify how missing data are indicated in the CSV file. 
+
+```{r}
+#TODO 8.1: Read in LifeExp.csv and check that it was read in correctly
+gapminder1 <- read.csv("LifeExp.csv", header = TRUE, na.strings = "")
+gapminder1 <- gapminder1[1:260,]
+```
+
+Investigate the data using `str`, `head`, `names`, etc., to make sure it was read in correctly. (Hint: it should have 260 rows and 218 columns.) You don't need to submit code for this, just convince yourself it was read in correctly. Because names in R cannot start with a number, the columns after the first column have an `X` prepended, e.g., `X1804` and `X2001`. We'll address this later on.
+
+Note that some spreadsheet applications do weird things when exporting data into csvs, which may cause your data set to show up as having 999 rows instead of 260. If this is the case, then use the code `gapminder1 <- gapminder1[1:260, ]` to only work with the 260 rows that comprise the data set. 
+
+The name of the variable containing the countries is something like `Life.expectancy` (yours might be different, but similar). Rename this column to `country`. You can do this using the `names` function.
+
+```{r}
+#TODO 8.2: rename name of the first column to "country"
+names(gapminder1)[1] <- "country"    
+```
+
+##Computing some summary statistics
+Use `apply` to compute the **mean, median, minimum, and maximum** life expectancy for each year. You'll need to exclude the first column, and also will need to tell R how to handle missing values. 
+
+```{r}
+#TODO 8.3: calculate mean, median, minimum, and maximum life expectancy for each year here
+apply(X = gapminder1[-1], MARGIN = 2, FUN = mean, na.rm = TRUE)  
+apply(X = gapminder1[-1], MARGIN = 2, FUN = median, na.rm = TRUE)          
+apply(X = gapminder1[-1], MARGIN = 2, FUN = min, na.rm = TRUE)      
+apply(X = gapminder1[-1], MARGIN = 2, FUN = max, na.rm = TRUE)   
+# Or apply(gapminder1[,2:ncol(gapminder1)], MARGIN = 2, mean, na.rm = TRUE)  
+```
+
+##Changing the data from wide to long format
+Notice the data are in "wide" format, with each column representing a year rather than "long" format, where year is a variable.
+
+Load the `tidyr` library. Use the `gather` function to transform the data from wide to long format and assign the result back to `gapminder1` (i.e., after the call to the `gather` function, your new `gapminder1` should have 56420 rows and 3 columns).  Call the variable containing the years `year` and call the variable containing the life expectancies `lifeExp`. At this point the years will be represented as `X1804` and `X2001` for example. We will fix that soon. Consult Section 6.4 of the book for details on the `gather` function. 
+
+```{r}
+#TODO 8.4: Change gapminder1 from wide to long format here
+library(tidyr)
+gapminder1 <- gather(gapminder1, key = year, value = lifeExp, -country, na.rm = FALSE, convert = FALSE)
+str(gapminder1)
+dim(gapminder1)
+```
+
+After transformation the data frame should contain 56420 observations (i.e., rows) on 3 variables (i.e., columns). 
+
+Because names in R cannot start with a number, the columns after the first have an `X` prepended, e.g., `X1804` and `X2001`. We will use the `substr` and `as.integer` functions to strip off the `X` and then to convert the resulting values to integer. (The `substr` function will be covered later in the course, but we'll use it here anyway!)
+
+First use the code below to strip off the `X`. Make sure you remove the `eval = FALSE` code chunk option so that your R Markdown file will compile correctly. 
+
+```{r}
+gapminder1$year <- substr(x = gapminder1$year, start = 2, stop = 5)
+```
+
+At that point the variable `year` should look good, i.e., should have the `X` removed, but will still be a character vector (see if you can confirm this yourself). Next, use `as.integer` to convert `year` to an integer vector. Again, remove the `eval = FALSE` code chunk option for proper compiling of the html document.
+ 
+```{r}
+gapminder1$year <- as.integer(gapminder1$year)
+```
+ 
+##Graphical displays
+Load the `ggplot2` library and use it to create the following graphical displays:
+
+1. Draw a histogram of life expectancy, using all the data.
+ 
+```{r}
+#TODO 8.5: Draw histogram here     
+library(ggplot2)   
+hist(gapminder1$lifeExp)
+## or
+ggplot(gapminder1, aes(x = lifeExp)) + geom_histogram()
+```
+
+2. Draw side by side boxplots of life expectancy for the years 1900, 1910, 1920, 1930, 1940, 1950, 1960, 1970, 1980, and 1990. You'll probably want to use `subset` in the `data` specification of `ggplot` to obtain only those 10 specific years. Also, try and use the `seq` function when you subset the data to avoid explicitly creating a vector of these dates.
+
+```{r}
+#TODO 8.6: Draw side boxplots here
+ggplot(subset(gapminder1, year %in% seq(1900, 1990, by = 10)), aes(x = year, y = lifeExp)) + geom_boxplot(aes(group = year))
+## or
+ggplot(gapminder1[gapminder1$year==seq(1900, 1990, by=10),], aes(x = year, y = lifeExp)) + geom_boxplot(aes(group = year))
+```
+
+3. Draw a line graph of the life expectancy against year for the United States. 
+
+```{r}
+##TODO 8.7: Draw line grph haere
+ggplot(subset(gapminder1, country %in% c("United States")), aes(x = year, y = lifeExp)) + geom_line()      
+## Or   
+ggplot(subset(gapminder1, country == "United States")) + geom_line(aes(x = year, y = lifeExp))
+```
+
+4. Draw (on the same set of axes) a line graph of life expectancy for the five most populous countries - China, India, United States, Indonesia, and Brazil - where each country's line is a different color. (Any idea about why life expectancy dropped so much in many of these countries between 1911-1925?)
+
+```{r}
+##TODO 8.8: Draw line graph grouped by country here
+populous_countries <- subset(gapminder1, country %in% c("China", "India", "United States", "Indonesia", "Brazil"))   
+ggplot(populous_countries, aes(x = year, y = lifeExp, group = country)) + geom_line(aes(color = country))
+```
+
+********
+
+Congratulations! You've reached the end of Exercise 8.
+
+###Questions?
+
+If you have any lingering questions about the material in this document or in the corresponding chapter, put them here.
+
+*None*
+
+
+###Give us your feedback!
+
+1.  How do you feel you're doing in this class?
+
+*Learnt a lot from Help in R in this exercise.*
+
+2.  What could be done to improve your learning experience?
+
+*The professors' answrs on Piazza are very helpful. I think it would be helpful if add these reminders in the exercise.*
+
+*********

@@ -1,0 +1,253 @@
+---
+title: "FOR/STT 875, Exercise 5"
+name: "Yining(Jenny) Chen"
+date: "7/23/2019"
+output: html_document
+---
+
+## Learning objectives
+  + Practice with lists, data frames, and associated functions
+  + Summarize variables held in lists and data frames
+  + Work with R's linear regression `lm` function output
+  + Review logical subsetting of vectors for partitioning and assigning of new values
+  + Generate and visualize data from mathematical functions
+  
+## Overview
+Modify this R Markdown file by filling in the code needed to answer the questions.
+
+## Submission instructions
+Upload your exercise_5.Rmd and exercise_5.html files to the Exercise 5 D2L dropbox. 
+
+## Grading
+You will receive full credit if your R Markdown document: 1) compiles without error; and 2) correctly completes the `# TODO:` code chunks. Also, please, fill in the feedback [questions](#questions) at the end of the exercise. 
+
+## Getting started
+Again, set some global options to make the R code printed in the HTML output look nice.
+
+```{r global_options}
+knitr::opts_chunk$set(comment = NA, tidy = TRUE)
+```
+
+## Lists
+
+The `lm` function fits a linear model and returns a list containing elements such as the coefficients of the fitted model, the residual values, etc. Built in to R is a dataset with the fertility rate and several socioeconomic variables for 47 French-speaking provinces in Switzerland from the late 1800s. Of interest is how the socioeconomic values are related to the fertility rate. First we make the data available, and take a quick look.
+
+```{r}
+data(swiss)
+str(swiss)
+head(swiss)
+cor(swiss)
+```
+
+From the correlation matrix we see that `Education` has the strongest correlation with `Fertility`. Next we draw a scatter plot of the two variables to assess linearity. Here are two different ways to request the scatter plot. The second matches the syntax for specifying a linear model in the `lm` function.
+
+```{r}
+plot(swiss$Education, swiss$Fertility)
+plot(Fertility ~ Education, data = swiss)
+```
+
+The scatter plots don't give major causes for concern, although it looks like the outlier at the bottom right influences the correlation and the slope of a fitted least squares line substantially, but we will ignore those issues and press ahead. Next we fit a linear model, assign it to the R object `swiss.lm`, ask whether the object is a list, and obtain the names of the elements of `swiss.lm`.
+
+```{r}
+swiss.lm <- lm(Fertility ~ Education, data = swiss)
+is.list(swiss.lm)
+names(swiss.lm)
+```
+
+We see that `swiss.lm` is a list with 12 components. 
+
+We can extract the components in several ways. First we will use the `$` method, familiar from working with data frames. For example `swiss.lm$residuals` returns the residuals from the model. Use this method to extract the coefficients and the residuals from the model. Assign the results to R objects called `swiss.lm.coef.1` and `swiss.lm.resid.1`. 
+
+```{r}
+swiss.lm.coef.1 <- swiss.lm$coefficients
+swiss.lm.resid.1 <- swiss.lm$residuals
+```
+
+Now display the coefficients and the residuals. 
+```{r}
+swiss.lm.coef.1
+swiss.lm.resid.1
+```
+
+We might expect that the resulting objects are vectors. Use `is.vector` to test whether this is the case.
+
+```{r}
+is.vector(swiss.lm.coef.1)
+is.vector(swiss.lm.resid.1)
+```
+
+There are several other ways to extract components of a list. Here are a few ways to extract the coefficients.
+
+1. `swiss.lm$coefficients`
+2. `swiss.lm[["coefficients"]]`
+3. `swiss.lm["coefficients"]`
+
+(We could also use the number `1` in place of `"coefficients"` in (2) and (3).)
+
+We've already used method 1 and assigned the result to `swiss.lm.coef.1`. Use the second and third methods, and assign the results to `swiss.lm.coef.2` and `swiss.lm.coef.3`. Also display all three results below.
+
+```{r}
+# TODO 5.1: Create swiss.lm.coef.2 and swiss.lm.coef.3 here, then print swiss.lm.coef.1, swiss.lm.coef.2, and swiss.lm.coef.3
+swiss.lm.coef.2 <- swiss.lm[["coefficients"]]    
+swiss.lm.coef.3 <- swiss.lm["coefficients"]     
+# Print    
+swiss.lm.coef.1      
+swiss.lm.coef.2    
+swiss.lm.coef.3    
+```
+
+Do the resulting objects look any different? Use `is.vector` and `is.list` on each of the three objects to determine whether they are vectors or lists.
+
+```{r}
+# TODO 5.2: Apply is.vector and is.list on swiss.lm.coef.1, swiss.lm.coef.2, and swiss.lm.coef.3 here
+is.vector(swiss.lm.coef.1)      
+is.vector(swiss.lm.coef.2)      
+is.vector(swiss.lm.coef.3)     
+is.list(swiss.lm.coef.1)   
+is.list(swiss.lm.coef.2)   
+is.list(swiss.lm.coef.3)    
+```
+
+You should have discovered that Methods 1 and 2 returned a vector, but Method 3 returned a list. The difference may seem subtle and not particularly important, but it will become much more important when we start to write our own functions.
+
+## Subsetting with logical vectors
+
+Subsetting with logical vectors is an essential skill. We'll practice this using the `gapminder` data frame. 
+
+```{r}
+gapminder <- read.delim("http://blue.for.msu.edu/FOR875/data/gapminder.tsv")
+str(gapminder)
+```
+
+Here are two examples. 
+
+First we compute the mean population of France for the years contained in the dataset.
+
+```{r}
+mean(gapminder$pop[gapminder$country == "France"])
+```
+
+Next we extract the countries in the continent `Africa`. Since the countries are repeated for each of the  years, we'll use `unique` to list the countries only once.
+
+```{r}
+unique(gapminder$country[gapminder$continent == "Africa"])
+```
+
+Next, draw a boxplot of the GDP for the year 1952.
+
+```{r}
+boxplot(gapminder$gdpPercap[gapminder$year == 1952])
+hist(gapminder$gdpPercap[gapminder$year == 1952])
+boxplot(gapminder$gdpPercap[gapminder$year == 2002])
+hist(gapminder$gdpPercap[gapminder$year == 2002])
+```
+
+We can combine conditions with the operators `&` and `|` which represent "and" and "or" for vectors. For example, here's how to extract all the countries whose population is more than 150 million in the year 1992.
+
+```{r}
+gapminder$country[gapminder$pop > 150000000 & gapminder$year == 1992]
+```
+
+Use these ideas to extract the population of all countries whose life expectancy is more than 70 years, during 1967.
+
+```{r}
+# TODO 5.3: Add code to get the population of all countries meeting the noted conditions
+gapminder$pop[gapminder$lifeExp > 70 & gapminder$year == 1967]
+```
+
+Another useful operator is `%in%`. For example here's how to compute the mean population for the United States, Mexico, and Canada during 1997.
+
+```{r}
+mean(gapminder$pop[gapminder$country %in% c("United States", "Mexico", "Canada") & gapminder$year == 1997])
+```
+
+Subscripting also can be used to change values of existing R objects as in the following example.
+
+```{r}
+dd <- data.frame(x = c("dog", "cat", "oink", "pig", "oink", "cat", "dog", "cat", "dog"), y = c("dog", "cat", "cat", "pig", "cow", "dog", "dog", "cat", "pig"), stringsAsFactors = FALSE)
+dd
+dd$x[dd$x == "oink"] <- "pig"
+dd
+dim(dd)
+dd$same <- rep("no", dim(dd)[1])
+dd
+dd$same[dd$x == dd$y] <- "yes"
+dd
+```
+
+Next we will add a variable called `G8` to the `gapminder` data frame which will be equal to 1 or 0 depending on whether the country is in the G8 group of nations, which includes France, Germany, Italy, the United Kingdom, Japan, the United States, Canada, and Russia.
+
+First, create a variable called `G8`, all of whose values are 0, in the gapminder data frame. 
+
+```{r}
+# TODO 5.4: Add the G8 variable to the gapminder data frame here
+gapminder$G8 <- rep(0, length.out = dim(gapminder)[1])    
+```
+
+Now set `G8` equal to 1 if the country is in the G8. One way to do this is to give 8 separate R commands, one for each of the G8 countries. Another is to use `%in%` and complete the work in one line.
+
+```{r}
+# TODO 5.5: Set the G8 variable to 1 for G8 countries here    
+gapminder$G8[gapminder$country %in% c("France", "Germany", "Italy", "United Kingdom", "Japan", "United States", "Canada", "Russia")] <- 1    
+head(gapminder)     
+```
+
+## Patterned data
+
+We'll plot the function $f(x) = \cos(x)$ for $x$ between $-2\pi$ and $2\pi$.
+
+First, create a vector `x` containing 1000 equally spaced values between $-2\pi$ and $2\pi$ using the `seq` function.
+
+```{r}
+##Create x here
+x <- seq(from=-2*pi, to=2*pi, length.out=1000)    
+```
+
+Next use the `plot` command to plot the function. The first argument to `plot` should be the vector `x` we just created. The second argument should be `cos(x)`. 
+
+```{r}
+# TODO 5.6: Draw the plot here
+x<- seq(from = -2*pi, to = 2*pi, length.out = 1000) 
+plot(x, y=cos(x))
+```
+
+The graphic is OK, but since we're plotting the graph of a function, we should connect the points rather than plotting each of the points. Add the argument `type = "l"` to accomplish this.
+
+```{r}
+# TODO 5.7: Draw the second plot here    
+x<- seq(from = -2*pi, to = 2*pi, length.out = 1000) 
+plot(x, y=cos(x), type = "l")   
+```
+
+As seen in the G8 example above, `rep` is another very useful function for generating patterned data. The `rep` function replicates its first argument. Important arguments include `length.out`, `times`, and `each`. Some examples:
+
+```{r}
+ltrs <- c("a", "b", "q", "z")
+rep(ltrs, length.out = 9)
+rep(ltrs, each = 3)
+rep(ltrs, times = 3)
+rep(ltrs, times = c(3, 2, 4, 7))
+```
+
+********
+
+Congratulations! You've reached the end of Exercise 5.
+
+###Questions?
+
+If you have any lingering questions about the material in this document or in the corresponding chapter, put them here.
+
+*None*
+
+
+###Give us your feedback!
+
+1.  How do you feel you're doing in this class?
+
+*Piazza is really helpful. Found out all my questions had been asked by other classmates and had the answers already.*
+
+2.  What could be done to improve your learning experience?
+
+*None. Perfect!*
+
+*********
