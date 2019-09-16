@@ -1,5 +1,4 @@
-# STT875
-# R Programing for Data Science
+# STT875 R Programing for Data Science
 
 
 ## Course Overview
