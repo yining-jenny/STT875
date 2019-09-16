@@ -18,15 +18,20 @@ and tools
 ## Course Topics
 List of topics covered in the learning material: 
 1. Overview of R
-2. Install and configuration of R programming environment 3. Basic language elements and data structures
+2. Install and configuration of R programming environment      
+3. Basic language elements and data structures
 4. R+Knitr+Markdown
 5. Data input/output
-6. Data storage formats 7. Subsetting objects 8. Vectorization
-9. Control structures 10. Functions
-11. Scoping Rules
-12. Loop functions
+6. Data storage formats        
+7. Subsetting objects       
+8. Vectorization
+9. Control structures        
+10. Functions     
+11. Scoping Rules    
+12. Loop functions    
 13. Graphics and visualization
-14. Grammar of data manipulation (dplyr and related tools) 15. Debugging/profiling
+14. Grammar of data manipulation (dplyr and related tools)      
+15. Debugging/profiling
 16. Spatial and textual
 17. R and C++ integration
 18. Development of online interfaces and data visualization
