@@ -2,7 +2,7 @@
 
 
 ## Course Overview
-Programming in R and use of associated Open Source tools. Addressing practical issues in workflow documentation, data management, and scientific computing.
+Programming in R and use of associated Open Source tools. Addressing practical issues in workflow documentation, data management, and scientific computing.         
 The goal of this course is to applied theoretical aspects of R programming for data sciences. Topics cover generic programming language concepts as they are implemented in high-level languages such as R. Course content focuses on design and implementation of R programs to meet routine and specialized data manipulation/management and analysis objectives. Attention will also be given to mastering concepts and tools necessary for implementing reproducible research.
 
 ## Course Objective
