@@ -39,5 +39,3 @@ List of topics covered in the learning material:
 20. Data structures for specialized data types, e.g., spatial and signal data    
      
 
-## Exercise web link:
-Exercise 2: file:///Users/ray/Desktop/MSU/2019%20Summer/Exerciese/02/exercise_2.html     
