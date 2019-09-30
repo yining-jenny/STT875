@@ -1,4 +1,4 @@
-# STT875 R Programing for Data Science
+# STT875: R Programing for Data Science
      
 ## Course Overview
 Programming in R and use of associated Open Source tools. Addressing practical issues in workflow documentation, data management, and scientific computing.         
